@@ -1,0 +1,44 @@
+[
+  {
+    "backend": "postgres",
+    "n_writes": 54,
+    "write_latency_ms": {
+      "p50": 14.85,
+      "p95": 28.83
+    },
+    "n_questions": 18,
+    "recall_at_k": 1.0,
+    "search_latency_ms": {
+      "p50": 14.48,
+      "p95": 25.12
+    }
+  },
+  {
+    "backend": "qdrant",
+    "n_writes": 54,
+    "write_latency_ms": {
+      "p50": 11.58,
+      "p95": 18.81
+    },
+    "n_questions": 18,
+    "recall_at_k": 1.0,
+    "search_latency_ms": {
+      "p50": 11.06,
+      "p95": 14.27
+    }
+  },
+  {
+    "backend": "neo4j",
+    "n_writes": 54,
+    "write_latency_ms": {
+      "p50": 28.52,
+      "p95": 46.16
+    },
+    "n_questions": 18,
+    "recall_at_k": 1.0,
+    "search_latency_ms": {
+      "p50": 20.47,
+      "p95": 22.09
+    }
+  }
+]

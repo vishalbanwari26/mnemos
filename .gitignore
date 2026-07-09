@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+benchmark/results/*.json
+# The backend comparison costs nothing to reproduce (no LLM calls) and is
+# committed as real evidence, unlike the LLM benchmark results above.
+!benchmark/results/backend_comparison.json
+.DS_Store
+data/

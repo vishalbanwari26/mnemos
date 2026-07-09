@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: mnemos
+      POSTGRES_PASSWORD: mnemos
+      POSTGRES_DB: mnemos
+    ports:
+      - "5432:5432"
+    volumes:
+      - mnemos_pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mnemos -d mnemos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mnemos_pgdata:
