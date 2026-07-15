@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mnemos-api",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/vishalbanwari/Documents/GitHub/mnemos && PYTHONPATH=src .venv/bin/uvicorn mnemos.api.main:app --port 8000"
+      ],
+      "port": 8000,
+      "autoPort": false
+    },
+    {
+      "name": "mnemos-dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "autoPort": false,
+      "cwd": "/Users/vishalbanwari/Documents/GitHub/mnemos/dashboard"
+    },
+    {
+      "name": "portfolio-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3458"],
+      "port": 3458,
+      "autoPort": false,
+      "cwd": "/Users/vishalbanwari/Documents/GitHub/vishalbanwari26.github.io"
+    }
+  ]
+}

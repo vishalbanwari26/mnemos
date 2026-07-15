@@ -117,3 +117,27 @@ class MemoryEngine:
     async def reset_user(self, user_id: str) -> None:
         await self.storage.delete_episodes_for_user(user_id)
         await self.storage.delete_facts_for_user(user_id)
+
+    async def aclose(self) -> None:
+        """Release backend resources — e.g. Qdrant's local-mode directory
+        lock, Neo4j's driver pool. No-op for Postgres. Call this (or use
+        `async with`) when done with an engine built outside the long-lived
+        API/CLI process, so a later process (or a later `Memory()` call in
+        this one) can reopen the same store.
+
+        Goes through the storage factory's cache reset rather than
+        `self.storage.close()` directly: Qdrant/Neo4j backends are cached as
+        process-wide singletons keyed by backend name (see
+        storage/factory.py), so closing this engine's backend without
+        evicting it from that cache would leave a later `get_storage_backend()`
+        call returning an already-closed instance.
+        """
+        from mnemos.storage.factory import reset_storage_backend_cache
+
+        await reset_storage_backend_cache()
+
+    async def __aenter__(self) -> "MemoryEngine":
+        return self
+
+    async def __aexit__(self, *exc_info: object) -> None:
+        await self.aclose()
