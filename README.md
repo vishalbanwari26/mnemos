@@ -68,6 +68,21 @@ weighting works best for this user — the mechanism, not a placeholder.
 
 <p align="center"><img src="docs/screenshots/procedural_strategies.png" width="800" alt="Procedural Strategies view showing live uses and success rate per strategy"></p>
 
+## Quickstart
+
+```bash
+git clone https://github.com/vishalbanwari26/mnemos && cd mnemos
+cp .env.example .env   # fill in ANTHROPIC_API_KEY or GROQ_API_KEY + LLM_PROVIDER
+docker compose up -d   # Postgres + pgvector
+uv sync --extra dev
+uv run alembic upgrade head
+uv run python -m mnemos.cli.demo   # terminal chat; restart it to test cross-session recall
+```
+
+Not on PyPI yet, so `git clone` is the install for now. No Docker, want the
+full HTTP API + dashboard, or want to try the Qdrant/Neo4j backends instead?
+See [Running it](#running-it) below for all of that.
+
 ## Why this exists
 
 Chat agents without persistent memory forget everything between sessions.
