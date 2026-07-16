@@ -86,7 +86,11 @@ async def test_search_episodes_ranks_exact_text_match_first(backend, new_user_id
     assert len(matches) == 2
     top_episode, top_distance = matches[0]
     assert top_episode.content == target
-    assert top_distance < 1e-6  # identical text -> identical mock embedding -> distance ~0
+    # identical text -> identical mock embedding -> distance ~0. 1e-3 rather than
+    # 1e-6: Neo4j's vector index is approximate (HNSW-based), so even identical
+    # embeddings return a tiny non-zero distance there, unlike the other backends'
+    # exact similarity search.
+    assert top_distance < 1e-3
 
 
 async def test_delete_episodes_for_user(backend, new_user_id: str):
@@ -129,7 +133,9 @@ async def test_search_facts_ranks_exact_text_match_first(backend, new_user_id: s
 
     matches = await backend.search_facts(new_user_id, _embedder.embed_one(target), top_k=2)
     assert matches[0][0].fact == target
-    assert matches[0][1] < 1e-6
+    # See the matching comment in test_search_episodes_ranks_exact_text_match_first
+    # above: 1e-3 to tolerate Neo4j's approximate vector index.
+    assert matches[0][1] < 1e-3
 
 
 async def test_update_fact_status_and_confidence(backend, new_user_id: str):
