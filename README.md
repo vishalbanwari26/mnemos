@@ -42,6 +42,12 @@ chat loop uses, not a simplified illustration.
 
 <p align="center"><img src="docs/screenshots/retrieval_trace.png" width="800" alt="Retrieval Trace view showing per-item similarity, recency, and score"></p>
 
+That transparency isn't just a dashboard view here — it's now a standalone
+library, [memlens](https://github.com/vishalbanwari26/memlens), that traces
+retrieval for any backend (mem0, raw pgvector, or mnemos itself): every
+candidate considered, its full score breakdown, and whether it was included
+or excluded and why.
+
 **The system prunes itself.** Reflection has merged 4 pairs of near-duplicate
 facts into single consolidated statements (via real LLM tool-use calls) and
 decayed stale facts' confidence; a low-value fact that crossed the forget
