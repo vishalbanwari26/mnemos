@@ -362,6 +362,88 @@ require `ANTHROPIC_API_KEY`/`GROQ_API_KEY` respectively and aren't included
 in this repo's history because they cost real API calls to generate — run
 one yourself and the result lands in `benchmark/results/`.
 
+## Using mnemos as a coding assistant's memory (MCP)
+
+`src/mnemos/mcp_server.py` exposes mnemos as an [MCP](https://modelcontextprotocol.io)
+server, so a tool-calling assistant (Claude Code, or anything else that
+speaks MCP) can use it as persistent memory across sessions instead of —
+or alongside — whatever memory mechanism it already has. Five tools:
+
+| Tool | Does |
+|---|---|
+| `mnemos_remember(fact)` | Store a durable fact worth recalling later |
+| `mnemos_recall(query, top_k=5)` | Retrieve memories relevant to a query |
+| `mnemos_list_memories(limit=50)` | List active memories with their IDs |
+| `mnemos_forget(fact_id, reason)` | Archive a specific memory (soft-delete, audited) |
+| `mnemos_reflect()` | Run a consolidation pass (merge/decay/forget) on demand |
+
+All memories are stored under one fixed user (`MNEMOS_MCP_USER_ID`, default
+`claude-code`) — this is a single-user personal memory store, not a
+multi-tenant one. `mnemos_remember`/`mnemos_recall` skip the episodic layer
+and LLM-based extraction entirely: the calling assistant is already the one
+deciding what's worth keeping, so re-running extraction over its own summary
+would be redundant. It respects `STORAGE_BACKEND` exactly like the CLI, API,
+and dashboard do, so whatever gets remembered here shows up there too.
+
+```bash
+uv run python -m mnemos.mcp_server                          # run it directly, stdio transport
+claude mcp add mnemos --scope user -- \
+  /path/to/mnemos/.venv/bin/python3 -m mnemos.mcp_server     # register with Claude Code
+```
+
+**Does it actually help, or is it just plumbing that runs?** Two separate
+checks, because "the tool call succeeds" and "the memory survives a real
+session boundary" and "the recalled context actually improves the answer"
+are three different claims:
+
+1. **Cross-process persistence** (`benchmark/verify_cross_session_persistence.py`) —
+   the binary, unfakeable check. Two fully independent OS processes, sharing
+   nothing but the external storage backend: process 1 calls
+   `mnemos_remember` and exits completely; process 2 starts cold afterward
+   and calls `mnemos_recall`. This is exactly what a real Claude Code
+   session boundary looks like (each session spawns the MCP server as its
+   own fresh subprocess), not a simulation within one running process.
+
+   ```bash
+   uv run python -m benchmark.verify_cross_session_persistence
+   # Process 1 — a 'session' that learns something, then exits completely...
+   #   Remembered [...]: The user is verifying that mnemos persists memory...
+   # Process 2 — a brand-new, independent 'session', shares no state with process 1...
+   #   - The user is verifying that mnemos persists memory... (similarity 0.29)
+   # PASS — memory written by process 1 was recalled by process 2.
+   ```
+
+2. **Does recalled context improve answer quality** (`benchmark/eval_claude_code_memory.py`) —
+   the same with-memory-vs-no-memory methodology as the main benchmark
+   above, run through the real `mnemos_remember`/`mnemos_recall` tool
+   functions instead of `ConversationManager`. Ten realistic things a user
+   might tell a coding assistant across past sessions (testing framework,
+   dependency manager, deploy target, editor, code-review preferences...),
+   then ten questions asked cold, scored before vs after:
+
+   | Condition | Answered correctly |
+   |---|---|
+   | Before mnemos (no memory, today's baseline) | 40% |
+   | After mnemos (recall via MCP) | 100% |
+   | **Delta** | **+60%** |
+
+   Real run, `--llm groq` (`openai/gpt-oss-120b`), retrieval hit rate 100%.
+   The 40% baseline isn't zero — a couple of questions have a defensible
+   generic best-practice answer (e.g. "should new code have type hints?")
+   that happens to match without any memory at all; the rest are simply
+   unknowable without it. Reproduce with:
+
+   ```bash
+   uv run python -m benchmark.eval_claude_code_memory --llm groq   # or --llm anthropic
+   ```
+
+To actually verify this from inside a real Claude Code session rather than
+a script: register the server (command above), start a **new** session
+(MCP servers load at session start, so an already-running session won't
+pick it up), ask it to remember something with `mnemos_remember`, then in a
+**different, later** session ask it to recall it — the only test that
+exercises the real product end to end rather than a proxy for it.
+
 ## Running it
 
 ```bash
@@ -420,7 +502,7 @@ uv run pytest tests/unit/test_retrieval.py  # runs against real local embeddings
                                               # the point of that file is proving semantic ranking works
 ```
 
-61 tests total: the storage backend-contract suite (11 behavioral tests ×
+63 tests total: the storage backend-contract suite (11 behavioral tests ×
 3 backends), retrieval ranking (real embeddings), extraction + dedup,
 procedural strategy selection/outcome-scoring, reflection merge/decay/
 forget/reinforce, the conversation loop, the full HTTP API via

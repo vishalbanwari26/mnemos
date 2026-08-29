@@ -9,7 +9,16 @@ class SentenceTransformerEmbeddingClient(EmbeddingClient):
     """
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self._model = SentenceTransformer(model_name)
+        try:
+            # Once cached, load fully offline — skip the Hugging Face Hub
+            # "check for updates" HTTP round trips this library otherwise
+            # makes on every load, which cost real seconds and contradict
+            # "no network call" above.
+            self._model = SentenceTransformer(model_name, local_files_only=True)
+        except OSError:
+            # Not cached yet (first run on this machine) — fall back to a
+            # normal load, which downloads and populates the cache.
+            self._model = SentenceTransformer(model_name)
         self._dimension = self._model.get_embedding_dimension()
 
     @property
