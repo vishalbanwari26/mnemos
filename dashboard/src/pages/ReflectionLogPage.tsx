@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '../api/client'
+import { api, STATIC_DEMO } from '../api/client'
 import { useUser } from '../context/UserContext'
 
 const ACTION_LABEL: Record<string, string> = {
@@ -61,7 +61,11 @@ export default function ReflectionLogPage() {
         <h3>Audit trail</h3>
         {log.isLoading && <p className="muted">Loading…</p>}
         {log.data?.entries.length === 0 && (
-          <p className="muted">No reflection actions yet.</p>
+          <p className="muted">
+            {STATIC_DEMO
+              ? 'No reflection actions yet. Reflection merges near-duplicate facts and decays facts not reinforced for 14 days; in this recording every fact was written on the day it was recorded, so nothing has aged yet.'
+              : 'No reflection actions yet.'}
+          </p>
         )}
         {log.data?.entries.map((entry) => (
           <div className="list-row" key={entry.id}>

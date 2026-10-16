@@ -6,6 +6,7 @@ import RetrievalTracePage from './pages/RetrievalTracePage'
 import StatsPage from './pages/StatsPage'
 import ReflectionLogPage from './pages/ReflectionLogPage'
 import ProceduralPage from './pages/ProceduralPage'
+import { STATIC_DEMO } from './api/client'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Chat', end: true },
@@ -36,6 +37,12 @@ function App() {
             </NavLink>
           ))}
         </nav>
+        {STATIC_DEMO ? (
+          <p className="muted demo-note">
+            Recorded demo: one fictional user, seven conversations over 24 days, real answers from the real
+            pipeline. <a href="https://github.com/vishalbanwari26/mnemos">Run it yourself</a>.
+          </p>
+        ) : (
         <div className="user-switcher">
           <label htmlFor="user-id-input">User</label>
           <input
@@ -44,6 +51,7 @@ function App() {
             onChange={(e) => setUserId(e.target.value)}
           />
         </div>
+        )}
       </aside>
       <main className="content">
         <Routes>

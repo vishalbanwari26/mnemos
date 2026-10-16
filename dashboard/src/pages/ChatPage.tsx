@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '../api/client'
+import { api, STATIC_DEMO } from '../api/client'
 import { useUser } from '../context/UserContext'
+import DemoQuestions from '../components/DemoQuestions'
 
 interface Turn {
   role: 'user' | 'assistant'
@@ -39,13 +40,16 @@ export default function ChatPage() {
     },
   })
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const text = message.trim()
-    if (!text) return
+  function send(text: string) {
     setTurns((prev) => [...prev, { role: 'user', content: text }])
     setMessage('')
     sendMessage.mutate(text)
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const text = message.trim()
+    if (text) send(text)
   }
 
   function handleReset() {
@@ -57,8 +61,10 @@ export default function ChatPage() {
     <>
       <h2 className="page-title">Chat</h2>
       <p className="muted">
-        Talking to <strong>{userId}</strong>. Restart the conversation below,
-        or switch users in the sidebar to test cross-session recall.
+        Talking to <strong>{userId}</strong>.{' '}
+        {STATIC_DEMO
+          ? 'This is a new session: everything it knows comes from seven earlier conversations.'
+          : 'Restart the conversation below, or switch users in the sidebar to test cross-session recall.'}
       </p>
 
       <div className="card">
@@ -78,6 +84,8 @@ export default function ChatPage() {
         {sendMessage.isError && (
           <div className="error-banner">{(sendMessage.error as Error).message}</div>
         )}
+
+        {STATIC_DEMO && <DemoQuestions pick={(q) => q.chats.map((c) => c.message)} onPick={send} disabled={sendMessage.isPending} />}
 
         <form className="chat-form" onSubmit={handleSubmit}>
           <input

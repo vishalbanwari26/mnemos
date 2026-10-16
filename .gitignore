@@ -15,3 +15,6 @@ benchmark/results/*.json
 !benchmark/results/backend_comparison.json
 .DS_Store
 data/
+
+# Recorded API responses for the static demo (scripts/record_demo.py)
+dashboard/demo-data/

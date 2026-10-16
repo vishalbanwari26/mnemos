@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
+import { STATIC_DEMO } from '../api/client'
 
 interface UserContextValue {
   userId: string
@@ -11,7 +12,7 @@ const STORAGE_KEY = 'mnemos.userId'
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userId, setUserIdState] = useState(
-    () => localStorage.getItem(STORAGE_KEY) ?? 'demo-user',
+    () => (STATIC_DEMO ? 'maya' : localStorage.getItem(STORAGE_KEY) ?? 'demo-user'),
   )
 
   function setUserId(id: string) {

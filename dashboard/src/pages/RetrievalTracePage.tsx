@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { api } from '../api/client'
+import { api, STATIC_DEMO } from '../api/client'
 import { useUser } from '../context/UserContext'
+import DemoQuestions from '../components/DemoQuestions'
 
 function scoreBar(score: number, color: string) {
   const pct = Math.max(0, Math.min(1, score)) * 100
@@ -26,12 +27,12 @@ export default function RetrievalTracePage() {
   const [asOf, setAsOf] = useState('')
 
   const trace = useMutation({
-    mutationFn: () => api.retrievalTrace(userId, query, asOf || undefined),
+    mutationFn: (q: string) => api.retrievalTrace(userId, q, asOf || undefined),
   })
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (query.trim()) trace.mutate()
+    if (query.trim()) trace.mutate(query)
   }
 
   return (
@@ -64,6 +65,14 @@ export default function RetrievalTracePage() {
           </button>
         </div>
       </form>
+
+      {STATIC_DEMO && (
+        <DemoQuestions
+          pick={(p) => p.traces.map((t) => t.query)}
+          onPick={(q) => { setQuery(q); trace.mutate(q) }}
+          disabled={trace.isPending}
+        />
+      )}
 
       {trace.isError && (
         <div className="error-banner">{(trace.error as Error).message}</div>
