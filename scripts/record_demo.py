@@ -18,7 +18,7 @@ import json
 import sys
 import urllib.request
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 USER = "maya"
@@ -32,7 +32,8 @@ SESSIONS: list[tuple[int, list[tuple[str, str]]]] = [
           ("assistant", "Morning river walks sound like a great routine for a beagle.")]),
     (21, [("user", "At work I build APIs with FastAPI and PostgreSQL."),
          ("assistant", "A solid stack. Anything you're working on right now?"),
-         ("user", "A billing service. I write all my tests with unittest, it's what the team uses."),
+         ("user",
+          "A billing service. I write all my tests with unittest, it's what the team uses."),
          ("assistant", "Got it, unittest for the billing service tests.")]),
     (18, [("user", "I'm vegetarian, by the way, and I cook most evenings."),
          ("assistant", "Nice. Do you have a favourite dish?"),
@@ -42,7 +43,8 @@ SESSIONS: list[tuple[int, list[tuple[str, str]]]] = [
          ("assistant", "Exciting! How is training going?"),
          ("user", "Three runs a week so far, the long one on Sundays."),
          ("assistant", "Long run on Sundays, three runs a week. Good luck!")]),
-    (9, [("user", "Code reviews: I like small pull requests and comments that explain why, not what."),
+    (9, [("user",
+          "Code reviews: I like small pull requests and comments that explain why, not what."),
          ("assistant", "Small PRs and why-comments. That makes reviews much easier."),
          ("user", "We deploy everything to Fly.io from GitHub Actions."),
          ("assistant", "Fly.io via GitHub Actions, understood.")]),
@@ -97,7 +99,7 @@ class Recorder:
 def main(base: str, out_dir: str) -> None:
     rec, u = Recorder(base, Path(out_dir)), f"/users/{USER}"
     rec.call("POST", f"{u}/reset")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for days_ago, turns in SESSIONS:
         rec.call("POST", f"{u}/seed", {"session_id": str(uuid.uuid4()),
                                         "occurred_at": (now - timedelta(days=days_ago)).isoformat(),
@@ -107,8 +109,10 @@ def main(base: str, out_dir: str) -> None:
 
     session, chats, traces = str(uuid.uuid4()), [], []
     for q in QUESTIONS:
-        traces.append({"query": q, "result": rec.call("POST", f"{u}/retrieval-trace", {"query": q, "as_of": None})})
-        chats.append({"message": q, "response": rec.call("POST", f"{u}/messages", {"message": q, "session_id": session})})
+        trace = rec.call("POST", f"{u}/retrieval-trace", {"query": q, "as_of": None})
+        reply = rec.call("POST", f"{u}/messages", {"message": q, "session_id": session})
+        traces.append({"query": q, "result": trace})
+        chats.append({"message": q, "response": reply})
     rec.save("presets.json", {"user": USER, "chats": chats, "traces": traces})
 
     rec.get(f"{u}/stats")
@@ -117,7 +121,8 @@ def main(base: str, out_dir: str) -> None:
         rec.get(f"{u}/memories/semantic?status={status}")
     rec.get(f"{u}/reflection-log")
     rec.get(f"{u}/procedural")
-    print(f"recorded demo user '{USER}' into {out_dir}: {len(chats)} chats, reflection {reflection}")
+    print(f"recorded demo user '{USER}' into {out_dir}: {len(chats)} chats, "
+          f"reflection {reflection}")
 
 
 if __name__ == "__main__":
