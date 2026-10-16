@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/vishalbanwari26/mnemos/actions/workflows/ci.yml/badge.svg)](https://github.com/vishalbanwari26/mnemos/actions/workflows/ci.yml)
 
+**Live demo: [vishalbanwari.tech/mnemos](https://vishalbanwari.tech/mnemos/)** (a recording of the real pipeline for one fictional user: seven conversations over 24 days, then six questions in a new session with their retrieval traces. Build it with `scripts/record_demo.py` and `scripts/build_pages.sh`.)
+
 A persistent memory framework for LLM agents. It gives an agent episodic
 memory (what was said, and when), semantic memory (distilled facts about the
 user), procedural memory (which retrieval strategy actually works for this
